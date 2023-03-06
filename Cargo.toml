@@ -1,6 +1,6 @@
 [package]
 name = "make-tools"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Makefile utility"
 authors = ["konkitoman"]
@@ -16,3 +16,5 @@ path = "./src/bin.rs"
 [dependencies]
 clap = { version = "4.1.8", features = ["derive"] }
 colored = "2.0.0"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.94"
