@@ -20,6 +20,7 @@ enum Commands {
 }
 
 #[derive(Parser, Debug)]
+#[command(version)]
 struct MakeTools {
     #[command(subcommand)]
     cmd: Commands,
