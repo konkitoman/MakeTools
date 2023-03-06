@@ -1,0 +1,18 @@
+[package]
+name = "make-tools"
+version = "0.1.0"
+edition = "2021"
+description = "Makefile utility"
+authors = ["konkitoman"]
+license = "GPL-3.0"
+repository = "https://github.com/konkitoman/MakeTools"
+keywords = ["make", "makefile"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "mktools"
+path = "./src/bin.rs"
+
+[dependencies]
+clap = { version = "4.1.8", features = ["derive"] }
+colored = "2.0.0"
