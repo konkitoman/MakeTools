@@ -36,11 +36,12 @@ impl MakeTools {
                     .output()
                     .unwrap();
                 let buffer = String::from_utf8(output.stdout.to_vec()).unwrap();
-                let need_to_run = buffer
+                // Commands that is needed to run!
+                let ctintr = buffer
                     .split('\n')
                     .filter(|s| is_compile_cmd(s))
                     .collect::<Vec<&str>>();
-                let len = need_to_run.len();
+                let len = ctintr.len();
 
                 let mut make_process = Command::new("make")
                     .args(args)
@@ -52,7 +53,6 @@ impl MakeTools {
                 let reader = BufReader::new(output);
 
                 let mut count = 0;
-
                 for new in reader.lines().flatten() {
                     if is_compile_cmd(&new) {
                         count += 1;
@@ -72,7 +72,11 @@ impl MakeTools {
                     .output()
                     .unwrap();
                 let buffer = String::from_utf8(output.stdout.to_vec()).unwrap();
+                // this is for preventing gcc -o main \
+                // main.c
+                // this is putting every argument on the same line
                 let commands = buffer.split("\\\n").collect::<String>();
+                // get all lines and find if is a compiler command!
                 let filtered_commends = commands
                     .split('\n')
                     .filter(|s| is_compile_cmd(s))
@@ -87,6 +91,7 @@ impl MakeTools {
                     let mut input_files: Vec<&str> = Vec::new();
                     let mut output_file: Option<&str> = None;
 
+                    // get replace local compiler path with the fill path
                     let mut args = command
                         .split(' ')
                         .filter(|e| !e.is_empty())
@@ -95,6 +100,7 @@ impl MakeTools {
                     let compiler = programs.find(*compiler).unwrap();
                     *args.first_mut().unwrap() = compiler.to_str().unwrap();
 
+                    // getting the input files and output file
                     for i in 1..args.len() {
                         if args[i] == "-o" {
                             output_file = Some(args[i + 1]);
@@ -117,10 +123,10 @@ impl MakeTools {
                                 || e.ends_with(".C")
                         })
                         .collect();
+                    // get the full path of every file
                     let input_files = input_files
                         .iter()
-                        .map(|e| current_dir.join(e))
-                        .map(|e| e.to_str().unwrap().to_owned())
+                        .map(|e| current_dir.join(e).to_str().unwrap().to_owned())
                         .collect::<Vec<String>>();
                     let Some(output_file) = output_file else{continue};
                     let output_file = current_dir.join(output_file).to_str().unwrap().to_owned();
