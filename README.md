@@ -3,16 +3,17 @@
 [![Crates.io](https://img.shields.io/crates/v/make-tools.svg)](https://crates.io/crates/make-tools)
 
 ## For viewing make progress!
-## Make fast compile_comands.json
-### If is not working for you should try [bear](https://github.com/rizsotto/Bear)
-### cmd: `mktools`
+## Make fast "compile_comands.json"
+### If is not working for you, you should try [bear](https://github.com/rizsotto/Bear)
 
 # You should run `make clean` before `mktools compile-commands`
 
 ![Preview](images/preview.jpg)
 
 # Instalation
+
 ## You should have rust installed first!
+
 ```sh
 cargo install make-tools
 ```
