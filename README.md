@@ -4,7 +4,7 @@
 
 ## For viewing make progress!
 ## Make fast compile_comands.json
-### If is not working for you you should try [bear](https://github.com/rizsotto/Bear)
+### If is not working for you should try [bear](https://github.com/rizsotto/Bear)
 ### cmd: `mktools`
 
 # You should run `make clean` before `mktools compile-commands`
