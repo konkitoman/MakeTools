@@ -22,15 +22,18 @@ enum Commands {
 #[derive(Parser, Debug)]
 #[command(version)]
 struct MakeTools {
+    #[arg(short = 'm')]
+    make_command: Option<String>,
     #[command(subcommand)]
     cmd: Commands,
 }
 
 impl MakeTools {
     pub fn run(self) {
+        let make = self.make_command.unwrap_or(String::from("make"));
         match self.cmd {
             Commands::Build { args } => {
-                let output = Command::new("make")
+                let output = Command::new(&make)
                     .args(args.clone())
                     .arg("-n")
                     .output()
@@ -43,7 +46,7 @@ impl MakeTools {
                     .collect::<Vec<&str>>();
                 let len = ctintr.len();
 
-                let mut make_process = Command::new("make")
+                let mut make_process = Command::new(&make)
                     .args(args)
                     .stdout(std::process::Stdio::piped())
                     .spawn()
@@ -66,7 +69,7 @@ impl MakeTools {
                 }
             }
             Commands::CompileCommands { args } => {
-                let output = std::process::Command::new("make")
+                let output = std::process::Command::new(&make)
                     .args(args)
                     .arg("-n")
                     .output()
