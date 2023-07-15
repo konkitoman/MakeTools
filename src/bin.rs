@@ -2,9 +2,7 @@ mod compiler_commands;
 
 use std::{
     io::{BufRead, BufReader, Write},
-    os::fd::AsFd,
     process::Command,
-    time::Duration,
 };
 
 use clap::{Parser, Subcommand};
@@ -92,7 +90,7 @@ impl MakeTools {
                 let sum: f64 = elapsed_times.iter().sum();
                 let output = make_process
                     .wait_with_output()
-                    .expect(format!("You need to have {make} in your path!").as_str());
+                    .unwrap_or_else(|_| panic!("You need to have {make} in your path!"));
                 let out = if output.status.success() {
                     "Completed".green()
                 } else {
@@ -106,7 +104,7 @@ impl MakeTools {
                     .args(args)
                     .arg("-n")
                     .output()
-                    .expect(format!("You probably not have {make} on your system, You need install \"{make}\" and then try again!").as_str());
+                    .unwrap_or_else(|_| panic!("You probably not have {make} on your system, You need install \"{make}\" and then try again!"));
                 let buffer = String::from_utf8(output.stdout.to_vec()).unwrap();
                 // this is for preventing gcc -o main \
                 // main.c
