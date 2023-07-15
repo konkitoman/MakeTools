@@ -3,10 +3,11 @@ mod compiler_commands;
 use std::{
     io::{BufRead, BufReader, Write},
     process::Command,
+    time::Duration,
 };
 
 use clap::{Parser, Subcommand};
-use colored::Colorize;
+use colored::{ColoredString, Colorize};
 
 #[derive(Subcommand, Clone, Debug)]
 enum Commands {
@@ -52,25 +53,51 @@ impl MakeTools {
                 let output = make_process.stdout.take().unwrap();
                 let reader = BufReader::new(output);
 
+                let mut current_time = std::time::SystemTime::now();
+                let mut elapsed_times = Vec::new();
+
                 let mut count = 0;
                 for new in reader.lines().flatten() {
+                    if let Ok(elapsed) = current_time.elapsed() {
+                        elapsed_times.push(elapsed.as_secs_f64())
+                    }
+                    current_time = std::time::SystemTime::now();
+                    let sum: f64 = elapsed_times.iter().sum();
+                    let avg = sum / elapsed_times.len() as f64;
+                    let remaining_time = avg * (len - count) as f64;
                     if is_compile_cmd(&new) {
                         count += 1;
                     }
-                    println!(
-                        "[{}/{}] {} :{new}",
-                        count,
-                        len,
-                        format!("{:.2}%", count as f64 / len as f64 * 100.0).green(),
-                    )
+
+                    let remaining_time = format_time(remaining_time);
+
+                    let eta = if remaining_time.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" Eta {remaining_time}")
+                    };
+
+                    let progress = count as f64 / len as f64 * 100.0;
+                    let progress = if progress.is_nan() {
+                        "Completed".green().to_string()
+                    } else {
+                        let progress = format!("{progress:.2}%").green();
+                        format!("[{count}/{len}] {progress}")
+                    };
+
+                    println!("{progress}{eta} :{new}",)
                 }
+
+                let sum: f64 = elapsed_times.iter().sum();
+                println!("Completed in {}", format_time(sum));
             }
             Commands::CompileCommands { args } => {
+                println!("Please wait!");
                 let output = std::process::Command::new(&make)
                     .args(args)
                     .arg("-n")
                     .output()
-                    .unwrap();
+                    .expect(format!("You probably not have {make} on your system, You need install \"{make}\" and then try again!").as_str());
                 let buffer = String::from_utf8(output.stdout.to_vec()).unwrap();
                 // this is for preventing gcc -o main \
                 // main.c
@@ -95,7 +122,6 @@ impl MakeTools {
                         .filter(|e| !e.is_empty())
                         .collect::<Vec<&str>>();
                     let compiler = args.first().unwrap();
-                    println!("compiler: {compiler}");
                     let compiler = match std::process::Command::new("which").arg(compiler).output()
                     {
                         Ok(output) => {
@@ -113,8 +139,6 @@ impl MakeTools {
                         }
                     };
 
-                    // let compiler = programs.find(*compiler).unwrap();
-                    println!("path: {compiler:?}");
                     *args.first_mut().unwrap() = compiler.as_str();
 
                     // getting the input files and output file
@@ -162,10 +186,11 @@ impl MakeTools {
                 let mut file = std::fs::File::options()
                     .write(true)
                     .create(true)
+                    .truncate(true)
                     .open("compile_commands.json")
                     .unwrap();
                 file.write_all(compiler_commands.as_bytes()).unwrap();
-                println!("Compiler commands created succesfuly!");
+                println!("compile_commands.json was created succesfuly!");
             }
         }
     }
@@ -184,6 +209,30 @@ fn is_compile_cmd(s: &str) -> bool {
             | "x86_64-w64-mingw32-clang"
             | "x86_64-w64-mingw32-clang++"
     )
+}
+
+fn format_time(secs: f64) -> ColoredString {
+    let minutes = secs / 60.0;
+    let hours = minutes / 60.0;
+    let days = minutes / 24.0;
+
+    let secs = secs as u32 % 60;
+    let minutes = minutes as u32 % 60;
+    let hours = hours as u32 % 24;
+    let days = days as u32;
+
+    if days > 0 {
+        format!("Days {days}:{hours:00}:{minutes:00}")
+    } else if hours > 0 {
+        format!("Hours {hours}:{minutes:00}:{secs:00}")
+    } else if minutes > 0 {
+        format!("Minutes {minutes:00}:{secs:00}")
+    } else if secs > 0 {
+        format!("Secs {secs:00}")
+    } else {
+        String::new()
+    }
+    .blue()
 }
 
 fn main() {
