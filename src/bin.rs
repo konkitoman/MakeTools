@@ -2,6 +2,7 @@ mod compiler_commands;
 
 use std::{
     io::{BufRead, BufReader, Write},
+    os::fd::AsFd,
     process::Command,
     time::Duration,
 };
@@ -54,7 +55,7 @@ impl MakeTools {
                 let reader = BufReader::new(output);
 
                 let mut current_time = std::time::SystemTime::now();
-                let mut elapsed_times = Vec::new();
+                let mut elapsed_times = vec![1.0];
 
                 let mut count = 0;
                 for new in reader.lines().flatten() {
@@ -89,7 +90,15 @@ impl MakeTools {
                 }
 
                 let sum: f64 = elapsed_times.iter().sum();
-                println!("Completed in {}", format_time(sum));
+                let output = make_process
+                    .wait_with_output()
+                    .expect(format!("You need to have {make} in your path!").as_str());
+                let out = if output.status.success() {
+                    "Completed".green()
+                } else {
+                    "Failure".red()
+                };
+                println!("{out} in {}", format_time(sum));
             }
             Commands::CompileCommands { args } => {
                 println!("Please wait!");
