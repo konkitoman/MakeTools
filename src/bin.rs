@@ -1,5 +1,4 @@
 mod compiler_commands;
-mod programs;
 
 use std::{
     io::{BufRead, BufReader, Write},
@@ -8,8 +7,6 @@ use std::{
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-
-use crate::programs::Programs;
 
 #[derive(Subcommand, Clone, Debug)]
 enum Commands {
@@ -88,8 +85,6 @@ impl MakeTools {
                 use compiler_commands::Command;
                 let mut compile_commands = Vec::new();
 
-                let mut programs = Programs::default();
-
                 for command in filtered_commends {
                     let mut input_files: Vec<&str> = Vec::new();
                     let mut output_file: Option<&str> = None;
@@ -100,8 +95,27 @@ impl MakeTools {
                         .filter(|e| !e.is_empty())
                         .collect::<Vec<&str>>();
                     let compiler = args.first().unwrap();
-                    let compiler = programs.find(*compiler).unwrap();
-                    *args.first_mut().unwrap() = compiler.to_str().unwrap();
+                    println!("compiler: {compiler}");
+                    let compiler = match std::process::Command::new("which").arg(compiler).output()
+                    {
+                        Ok(output) => {
+                            if output.status.success() {
+                                match String::from_utf8(output.stdout) {
+                                    Ok(str) => str.trim().to_owned(),
+                                    Err(err) => panic!("Cannot parse output form which: {err:?}"),
+                                }
+                            } else {
+                                panic!("Cannot find: {}", compiler);
+                            }
+                        }
+                        Err(_) => {
+                            panic!("Error accured when running which");
+                        }
+                    };
+
+                    // let compiler = programs.find(*compiler).unwrap();
+                    println!("path: {compiler:?}");
+                    *args.first_mut().unwrap() = compiler.as_str();
 
                     // getting the input files and output file
                     for i in 1..args.len() {
